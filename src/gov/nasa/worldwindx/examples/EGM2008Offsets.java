@@ -114,6 +114,40 @@ public class EGM2008Offsets extends ApplicationTemplate
             }
         }
 
+        protected static void printTestOffsets(EGM2008 egm2008Offsets)
+        {
+            double gridResolution = EGM2008.GRID_RESOLUTION;
+            double[] testLocations = new double[]
+            {
+                47, -94,
+                37, -119,
+                // Repeat previous coordinates to verify caching
+                47, -94,
+                37, -119,
+                47.02, -94.02,
+                47 + gridResolution, -94 - gridResolution,
+                36.0, -117.0,
+                36.0, -117.041666666667,
+                // Locations in the last longitude column, which interpolate across the antimeridian
+                0.0, -0.01,
+                45.0, -0.01
+            };
+            try
+            {
+                for (int i = 0; i < testLocations.length; i += 2)
+                {
+                    double lat = testLocations[i];
+                    double lon = testLocations[i + 1];
+                    System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
+                }
+                System.out.println();
+            }
+            catch (IOException iex)
+            {
+                iex.printStackTrace();
+            }
+        }
+
         public AppFrame()
         {
             Model m = this.wwjPanel.getWwd().getModel();
@@ -134,9 +168,12 @@ public class EGM2008Offsets extends ApplicationTemplate
                 System.out.println("*** EGM 2008 data not available.");
             }
 
-            // Run the elevation query in a separate thread to avoid locking up the user interface
+            // Run the offset and elevation queries sequentially on a single worker thread so that the user interface
+            // is not locked up and the EGM2008 instance is not accessed concurrently.
             Thread t = new Thread(() ->
             {
+                printTestOffsets(egm2008Offsets);
+
                 ArrayList<LatLon> elevLocations = new ArrayList<>();
                 for (int i = 0; i < locations.length; i += 2)
                 {
@@ -145,6 +182,7 @@ public class EGM2008Offsets extends ApplicationTemplate
 
                 loadBestElevations(elevLocations);
 
+                ArrayList<PointPlacemark> placemarks = new ArrayList<>();
                 try
                 {
                     for (int i = 0; i < locations.length; i += 2)
@@ -165,7 +203,7 @@ public class EGM2008Offsets extends ApplicationTemplate
                                 elevation));
                         }
                         placemark.setLabelText(label);
-                        layer.addRenderable(placemark);
+                        placemarks.add(placemark);
                     }
                 }
                 catch (IOException iex)
@@ -175,55 +213,12 @@ public class EGM2008Offsets extends ApplicationTemplate
 
                 SwingUtilities.invokeLater(() ->
                 {
+                    layer.addRenderables(placemarks);
                     System.out.println("Elevations retrieved");
                     getWwd().redraw();
                 });
             });
             t.start();
-
-            try
-            {
-                // Test offsets for some coordinates
-                float lat = 47;
-                float lon = -94;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                lat = 37;
-                lon = -119;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                // Try previous coordinates to verify caching
-                lat = 47;
-                lon = -94;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                lat = 37;
-                lon = -119;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                lat = 47.02f;
-                lon = -94.02f;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                float gridResolution = (float) EGM2008.GRID_RESOLUTION;
-                lat = 47 + gridResolution;
-                lon = -94 - gridResolution;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                lat = 36.0f;
-                lon = -117.0f;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                lat = 36.0f;
-                lon = -117.041666666667f;
-                System.out.println(lat + "," + lon + "," + egm2008Offsets.getOffset(lat, lon));
-
-                System.out.println();
-            }
-            catch (IOException iex)
-            {
-                iex.printStackTrace();
-            }
 
             this.wwjPanel.toolTipController.setAnnotationSize(new Dimension(500, 0));
             insertBeforeCompass(getWwd(), layer);

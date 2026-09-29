@@ -29,7 +29,7 @@ package gov.nasa.worldwind.util;
 
 import gov.nasa.worldwind.Configuration;
 
-import java.lang.reflect.Method;
+import java.awt.Desktop;
 import java.net.URL;
 
 /**
@@ -49,6 +49,12 @@ public class BrowserOpener
 
         try
         {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+            {
+                Desktop.getDesktop().browse(url.toURI());
+                return;
+            }
+
             String urlString = url.toString();
             if (Configuration.isMacOS())
                 browseMacOS(urlString);
@@ -65,14 +71,12 @@ public class BrowserOpener
 
     private static void browseMacOS(String urlString) throws Exception
     {
-        Class<?> fileManager = Class.forName("com.apple.eio.FileManager");
-        Method openURL = fileManager.getDeclaredMethod("openURL", String.class);
-        openURL.invoke(null, urlString);
+        Runtime.getRuntime().exec(new String[] {"open", urlString});
     }
 
     private static void browseWindows(String urlString) throws Exception
     {
-        Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + urlString);
+        Runtime.getRuntime().exec(new String[] {"rundll32", "url.dll,FileProtocolHandler", urlString});
     }
 
     private static void browseUnix(String urlString) throws Exception

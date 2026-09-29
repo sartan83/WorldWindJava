@@ -41,7 +41,8 @@ import java.nio.FloatBuffer;
 public class EGM2008
 {
     public static final int N_ROW_MARKERS = 2; // The beginning and end of each row of latitude data is a flag of some sort
-    public static final int N_LONGITUDE_COLS = 8640 + N_ROW_MARKERS; // Number of float32s in a row of data in the data file.
+    public static final int N_DATA_COLS = 8640; // Number of offset values in a row, excluding the row markers.
+    public static final int N_LONGITUDE_COLS = N_DATA_COLS + N_ROW_MARKERS; // Number of float32s in a row of data in the data file.
     public static final int N_LATITUDE_ROWS = 4321; // Number of rows.
     public static final double GRID_RESOLUTION = 2.5d / 60d; // 2.5 minute grid
     public static final double CELL_AREA = GRID_RESOLUTION * GRID_RESOLUTION;
@@ -49,8 +50,8 @@ public class EGM2008
     public static final int N_LAT_ROW_BYTES = N_LONGITUDE_COLS * 4; // Offsets are float32
 
     protected String offsetsFilePath;
-    protected BufferWrapper deltas;
     protected final BasicMemoryCache offsetCache;
+    protected final Object fileLock = new Object();
 
     protected class GridCell
     {
@@ -136,7 +137,7 @@ public class EGM2008
 
     public float getOffset(Angle lat, Angle lon) throws IOException
     {
-        return this.getOffset((float) lat.degrees, (float) lon.degrees);
+        return this.getOffset(lat.degrees, lon.degrees);
     }
 
     public int getLatRow(double lat)
@@ -144,7 +145,7 @@ public class EGM2008
         // Compute the row in the data file corresponding to a given latitude.
         // Latitude row zero in the data corresponds to 90 degrees latitude (north pole) and increases southward
         // Longitude column zero in the data corresponds to 0 degrees of longitude and increases eastward
-        float lat180 = 90f - (float) lat;
+        double lat180 = 90d - lat;
         return (int) Math.floor(lat180 / EGM2008.GRID_RESOLUTION);
     }
 
@@ -153,15 +154,39 @@ public class EGM2008
         // Compute the column in the data file corresponding to a given latitude and longitude.
         // Latitude row zero in the data corresponds to 90 degrees latitude (north pole) and increases southward
         // Longitude column zero in the data corresponds to 0 degrees of longitude and increases eastward
-        float lon360 = (float) lon;
-        if (lon < 0)
-        {
-            lon360 = lon360 + 360;
-        }
-        return (int) Math.floor(lon360 / EGM2008.GRID_RESOLUTION);
+        double lon360 = EGM2008.normalizeLon360(lon);
+        return Math.floorMod((int) Math.floor(lon360 / EGM2008.GRID_RESOLUTION), EGM2008.N_DATA_COLS);
+    }
+
+    protected static double normalizeLon360(double lon)
+    {
+        double lon360 = lon < 0 ? lon + 360 : lon;
+        return lon360 >= 360 ? lon360 - 360 : lon360;
+    }
+
+    /**
+     * Returns the index within a row of latitude data of the offset for the specified longitude column. Columns wrap
+     * around the antimeridian so that the column following the last data column is the first data column, skipping
+     * the row markers.
+     *
+     * @param lonCol the longitude column, as returned by {@link #getLonCol(double)}, possibly incremented.
+     *
+     * @return the index of the offset value within a row of latitude data.
+     */
+    protected int getRowDataIndex(int lonCol)
+    {
+        return Math.floorMod(lonCol, EGM2008.N_DATA_COLS) + EGM2008.N_ROW_MARKERS / 2;
     }
 
     public float[][] getLatRows(int latRow) throws IOException
+    {
+        synchronized (this.fileLock)
+        {
+            return this.doGetLatRows(latRow);
+        }
+    }
+
+    protected float[][] doGetLatRows(int latRow) throws IOException
     {
         int[] interpRowIndices =
         {
@@ -189,9 +214,9 @@ public class EGM2008
                 {
                     if (interpRowIndices[i] < EGM2008.N_LATITUDE_ROWS && latDataArray[i] == null)
                     {
-                        offsetFile.seek(interpRowIndices[i] * EGM2008.N_LAT_ROW_BYTES);
+                        offsetFile.seek((long) interpRowIndices[i] * EGM2008.N_LAT_ROW_BYTES);
                         byte[] latByteData = new byte[EGM2008.N_LAT_ROW_BYTES];
-                        offsetFile.read(latByteData);
+                        offsetFile.readFully(latByteData);
                         ByteBuffer latByteBuffer = ByteBuffer.wrap(latByteData).order(ByteOrder.LITTLE_ENDIAN);
                         FloatBuffer latFloatBuffer = latByteBuffer.asFloatBuffer();
                         float[] latData = new float[EGM2008.N_LONGITUDE_COLS];
@@ -214,21 +239,21 @@ public class EGM2008
         int latRow = this.getLatRow(lat);
         int lonCol = this.getLonCol(lon);
 
-        float[][] latDataArray = getLatRows(latRow);
+        float[][] latDataArray = this.getLatRows(latRow);
+        if (latDataArray[0] == null)
+        {
+            return 0f;
+        }
 
-        float baseOffset = latDataArray[0][lonCol + EGM2008.N_ROW_MARKERS / 2];
+        float baseOffset = latDataArray[0][this.getRowDataIndex(lonCol)];
         if (latDataArray[1] == null)
         {
             return baseOffset;
         }
 
         // Interpolate with surrounding offset cells
-        float lat180 = 90f - (float) lat;
-        float lon360 = (float) lon;
-        if (lon < 0)
-        {
-            lon360 = lon360 + 360;
-        }
+        double lat180 = 90d - lat;
+        double lon360 = EGM2008.normalizeLon360(lon);
         GridCell offsetCell = new GridCell(lon360, lat180);
         double baseLat = ((double) latRow) * EGM2008.GRID_RESOLUTION;
         double baseLon = ((double) lonCol) * EGM2008.GRID_RESOLUTION;
@@ -238,7 +263,7 @@ public class EGM2008
             double cellLon = baseLon + ((double) x) * EGM2008.GRID_RESOLUTION;
             for (int y = 0; y < 2; y++)
             {
-                float cellOffset = latDataArray[y][lonCol + EGM2008.N_ROW_MARKERS / 2 + x];
+                float cellOffset = latDataArray[y][this.getRowDataIndex(lonCol + x)];
                 double cellLat = baseLat + ((double) y) * EGM2008.GRID_RESOLUTION;
                 GridCell interpCell = new GridCell(cellLon, cellLat);
                 GridCell intersection = offsetCell.intersect(interpCell);

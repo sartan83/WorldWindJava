@@ -72,12 +72,7 @@
          Requires jogl-all.jar, gluegen-rt.jar, gdal.jar on the class path.
 
          The WorldWind extensions JAR file includes all class files, configuration files, image files, and data
-         resource files under the package gov.nasa.worldwindx. Requires the WorldWind core JAR file on the class path.
-
-         All JAR files have the Permissions attribute set to "all-permissions". This attribute is ignored for locally
-         launched applications, but is required for signed Web Start Applications. This property must match the setting
-         specified in the JNLP file used to launch the application.
-         See http://docs.oracle.com/javase/7/docs/technotes/guides/jweb/manifest.html#permissions -->
+         resource files under the package gov.nasa.worldwindx. Requires the WorldWind core JAR file on the class path. -->
 
     <macrodef name="bundleJarFiles">
         <attribute name="srcdir"/>
@@ -87,7 +82,6 @@
         <sequential>
             <jar jarfile="@{destdir}/worldwind.jar">
                 <manifest>
-                    <attribute name="Permissions" value="all-permissions"/>
                     <attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar gdal.jar"/>
                 </manifest>
                 <fileset dir="@{classdir}">
@@ -111,7 +105,6 @@
                 <manifest>
                     <attribute name="Class-Path" value="worldwind.jar"/>
                     <attribute name="Main-Class" value="gov.nasa.worldwindx.examples.ApplicationTemplate"/>
-                    <attribute name="Permissions" value="all-permissions"/>
                 </manifest>
                 <fileset dir="@{classdir}">
                     <include name="gov/nasa/worldwindx/**/*.class"/>

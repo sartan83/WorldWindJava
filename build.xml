@@ -10,6 +10,8 @@
 <project name="WorldWindJava" default="default" basedir=".">
     <description>Builds, tests, and runs the project WorldWindJava.</description>
     <import file="nbproject/build-impl.xml"/>
+    <import file="dependency-checksums.xml"/>
+    <target name="-post-init" depends="verifyDependencies"/>
     <!--
 
     There exist several targets which are by default empty and which can be 

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Integrity verification for the third-party JAR files committed to this repository.
+
+     The expected SHA-256 digests are recorded in dependency-checksums.properties. The verifyDependencies target
+     recomputes the digest of each JAR and fails the build if any digest is missing or does not match. Both
+     release-build.xml and the NetBeans build.xml import this file and run verifyDependencies before any target that
+     compiles against, executes, or bundles these JARs. -->
+
+<project name="worldwind.dependency-checksums" basedir=".">
+
+    <dirname property="worldwind.dependency-checksums.dir" file="${ant.file.worldwind.dependency-checksums}"/>
+    <property file="${worldwind.dependency-checksums.dir}/dependency-checksums.properties" prefix="sha256"/>
+
+    <macrodef name="verifySha256">
+        <attribute name="file"/>
+        <sequential>
+            <fail message="No SHA-256 digest recorded for @{file} in dependency-checksums.properties">
+                <condition>
+                    <not>
+                        <isset property="sha256.@{file}"/>
+                    </not>
+                </condition>
+            </fail>
+            <checksum file="${worldwind.dependency-checksums.dir}/@{file}" algorithm="SHA-256"
+                      property="${sha256.@{file}}" verifyproperty="sha256.@{file}.verified"/>
+            <fail message="SHA-256 digest mismatch for @{file}; expected ${sha256.@{file}}">
+                <condition>
+                    <isfalse value="${sha256.@{file}.verified}"/>
+                </condition>
+            </fail>
+        </sequential>
+    </macrodef>
+
+    <target name="verifyDependencies" description="Verifies the SHA-256 digests of the committed third-party JAR files.">
+        <verifySha256 file="gdal.jar"/>
+        <verifySha256 file="gluegen-rt-natives-linux-amd64.jar"/>
+        <verifySha256 file="gluegen-rt-natives-macosx-universal.jar"/>
+        <verifySha256 file="gluegen-rt-natives-windows-amd64.jar"/>
+        <verifySha256 file="gluegen-rt.jar"/>
+        <verifySha256 file="gluegen.jar"/>
+        <verifySha256 file="jogl-all-natives-linux-amd64.jar"/>
+        <verifySha256 file="jogl-all-natives-macosx-universal.jar"/>
+        <verifySha256 file="jogl-all-natives-windows-amd64.jar"/>
+        <verifySha256 file="jogl-all.jar"/>
+        <verifySha256 file="junit-4.5.jar"/>
+        <verifySha256 file="lib-external/batik/batik-rasterizer.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-anim.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-awt-util.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-bridge.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-codec.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-css.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-dom.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-ext.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-extension.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-gui-util.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-gvt.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-parser.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-script.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-svg-dom.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-svggen.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-swing.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-transcoder.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-util.jar"/>
+        <verifySha256 file="lib-external/batik/lib/batik-xml.jar"/>
+        <verifySha256 file="lib-external/batik/lib/js.jar"/>
+        <verifySha256 file="lib-external/batik/lib/pdf-transcoder.jar"/>
+        <verifySha256 file="lib-external/batik/lib/xalan-2.6.0.jar"/>
+        <verifySha256 file="lib-external/batik/lib/xerces_2_5_0.jar"/>
+        <verifySha256 file="lib-external/batik/lib/xml-apis-ext.jar"/>
+        <verifySha256 file="lib-external/batik/lib/xml-apis.jar"/>
+        <verifySha256 file="vpf-symbols.jar"/>
+        <echo message="Verified SHA-256 digests of third-party JAR files."/>
+    </target>
+
+</project>

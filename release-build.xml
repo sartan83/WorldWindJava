@@ -37,6 +37,7 @@
 
     <property file="release-build.properties"/>
     <import file="release-build.macros.xml"/>
+    <import file="dependency-checksums.xml"/>
 
     <!-- Main build targets. Provides generic targets that compile the Java sources, bundle JAR libraries, assemble API
          documentation, test the Java sources, and clean up the build output. -->
@@ -61,7 +62,7 @@
     <target name="assembleRelease" depends="compileReleaseSources, bundleRelease"
             description="Assembles JAR libraries for the release build type."/>
 
-    <target name="compileDebugSources">
+    <target name="compileDebugSources" depends="verifyDependencies">
         <mkdir dir="${worldwind.classes.dir}/debug"/>
         <compileJava srcdir="${worldwind.src.dir}" classdir="${worldwind.classes.dir}/debug" debug="true"
                      jdk="${worldwind.jdk}">
@@ -73,7 +74,7 @@
         </compileJava>
     </target>
 
-    <target name="compileReleaseSources">
+    <target name="compileReleaseSources" depends="verifyDependencies">
         <mkdir dir="${worldwind.classes.dir}/release"/>
         <compileJava srcdir="${worldwind.src.dir}" classdir="${worldwind.classes.dir}/release" debug="false"
                      jdk="${worldwind.jdk}">
@@ -85,13 +86,13 @@
         </compileJava>
     </target>
 
-    <target name="bundleDebug">
+    <target name="bundleDebug" depends="verifyDependencies">
         <mkdir dir="${worldwind.jar.dir}/debug"/>
         <bundleJarFiles srcdir="${worldwind.src.dir}" classdir="${worldwind.classes.dir}/debug"
                         destdir="${worldwind.jar.dir}/debug" debug="true"/>
     </target>
 
-    <target name="bundleRelease">
+    <target name="bundleRelease" depends="verifyDependencies">
         <mkdir dir="${worldwind.jar.dir}/release"/>
         <bundleJarFiles srcdir="${worldwind.src.dir}" classdir="${worldwind.classes.dir}/release"
                         destdir="${worldwind.jar.dir}/release" debug="false"/>
@@ -104,7 +105,7 @@
     <target name="assembleJavadoc" depends="compileJavadocSources, bundleJavadoc"
             description="Assembles the project documentation."/>
 
-    <target name="compileJavadocSources">
+    <target name="compileJavadocSources" depends="verifyDependencies">
         <mkdir dir="${worldwind.doc.dir}/javadoc"/>
         <javadoc destdir="${worldwind.doc.dir}/javadoc"
                  overview="${worldwind.src.dir}/overview.html"
@@ -167,7 +168,7 @@
 
     <target name="unitTest" depends="assembleDebug, compileUnitTestSources, runUnitTest"/>
 
-    <target name="compileUnitTestSources">
+    <target name="compileUnitTestSources" depends="verifyDependencies">
         <mkdir dir="${worldwind.classes.dir}/test"/>
         <compileJava srcdir="${worldwind.test.dir}" classdir="${worldwind.classes.dir}/test" debug="true"
                      jdk="${worldwind.jdk}">
@@ -181,7 +182,7 @@
         </compileJava>
     </target>
 
-    <target name="runUnitTest">
+    <target name="runUnitTest" depends="verifyDependencies">
         <delete dir="${worldwind.test.results.dir}"/>
         <mkdir dir="${worldwind.test.results.dir}"/>
         <junit failureproperty="unitTest.failure"
@@ -222,7 +223,7 @@
     <target name="assembleMilStd2525" depends="assembleRelease, compileMilStd2525, bundleMilStd2525"
             description="Assembles the MIL-STD-2525 symbology package."/>
 
-    <target name="compileMilStd2525">
+    <target name="compileMilStd2525" depends="verifyDependencies">
         <mkdir dir="${milstd2525.png.dir}"/>
         <!-- Rasterize the MIL-STD-2525 SVG sources. Exclude empty directories in order to suppress erroneous error
              messages from the Apache Batik Rasterizer. -->
@@ -356,11 +357,7 @@
     <target name="help.packGdal">
         <property name="gdal.jarfile.dir" location="gdal-jar"/>
         <delete file="gdal.jar"/>
-        <jar destfile="gdal.jar" basedir="${gdal.jarfile.dir}">
-            <manifest>
-                <attribute name="Permissions" value="all-permissions"/>
-            </manifest>
-        </jar>
+        <jar destfile="gdal.jar" basedir="${gdal.jarfile.dir}"/>
     </target>
 
     <!-- Helper tasks for bundling and unbundling the VPF symbols JAR file. These targets are used to modify the
@@ -375,10 +372,6 @@
     <target name="help.packVpf">
         <property name="vpf.jarfile.dir" location="vpf-symbols-jar"/>
         <delete file="vpf-symbols.jar"/>
-        <jar destfile="vpf-symbols.jar" basedir="${vpf.jarfile.dir}">
-            <manifest>
-                <attribute name="Permissions" value="all-permissions"/>
-            </manifest>
-        </jar>
+        <jar destfile="vpf-symbols.jar" basedir="${vpf.jarfile.dir}"/>
     </target>
 </project>

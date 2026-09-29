@@ -386,8 +386,6 @@ public class CachedDataRaster extends AVListImpl implements DataRaster
         if (this.rasterCache != null)
             this.rasterCache.clear();
 
-        System.runFinalization();
-
         System.gc();
 
         Thread.yield();

@@ -17,6 +17,10 @@ addons:
 services:
   - xvfb
   
+# Verify the vendored JOGL/GlueGen jars against their pinned SHA-256 digests
+before_script:
+  - ./lib-external/jogl-gluegen/get-jogl.sh --verify .
+
 # Build the project
 script:
   - ant -f release-build.xml

@@ -1,3 +1,14 @@
+################### WorldWindJava 2.3.0
+
+This release raises the minimum Java version from 11 to 17.
+
+- Both builds (release-build.xml and the NetBeans project) compile for Java 17. The release build now uses javac --release 17.
+- CI runs on JDK 17. Travis is on Ubuntu 22.04, and a GitHub Actions workflow is added.
+- JOGL/GlueGen 2.5.0, already bundled, is supported on Java 17. The run scripts and the NetBeans run.jvmargs now pass
+  --add-opens java.desktop/sun.awt=ALL-UNNAMED --add-opens java.desktop/sun.java2d=ALL-UNNAMED so that JOGL can use the
+  AWT toolkit lock instead of its fallback.
+- BrowserOpener uses java.awt.Desktop. The macOS path no longer relies on com.apple.eio.FileManager, which was removed in JDK 9.
+
 ################### WorldWindJava 2.2.1
 
 This version of WorldWind Java is a maintenance release that addresses small fixes (updated formatting, typos, bad references, etc.) to various areas of the code and removes references to services that are no longer supported by the WorldWind servers.

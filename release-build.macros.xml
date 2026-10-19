@@ -30,9 +30,9 @@
 
     <!-- Macros for compiling Java sources.
 
-         The javac attributes 'source' and 'target' are configured by the property worldwind.jdk.version in order to
-         explicitly define the Java compiler version. Without these attributes javac uses the latest compiler available
-         on the current machine, resulting in unpredictable class versions.
+         The javac attribute 'release' is configured by the property worldwind.jdk in order to explicitly define the
+         Java platform version. It compiles against the API of that release (javac release), so the class version and the
+         set of available JDK APIs stay fixed regardless of the JDK installed on the current machine.
 
          The javac compiler argument '-Xlint:unchecked' is specified in order to give more detail for unchecked
          conversion warnings. This argument is specified in the WorldWind Java IntelliJ IDEA project. Its use here
@@ -47,8 +47,7 @@
         <sequential>
             <javac srcdir="@{srcdir}"
                    destdir="@{classdir}"
-                   source="@{jdk}"
-                   target="@{jdk}"
+                   release="@{jdk}"
                    debug="@{debug}"
                    encoding="UTF-8"
                    fork="true"

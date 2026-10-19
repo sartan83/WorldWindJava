@@ -126,8 +126,8 @@
                 <pathelement location="gluegen-rt.jar"/>
                 <pathelement location="gdal.jar"/>
             </classpath>
-            <link href="http://download.oracle.com/javase/8/docs/api/"/>
-            <link href="https://jogamp.org/deployment/v2.4.0-rc-20200307/javadoc/"/>
+            <link href="https://docs.oracle.com/en/java/javase/17/docs/api/"/>
+            <link href="https://jogamp.org/deployment/v2.5.0/javadoc/jogl/javadoc/"/>
         </javadoc>
     </target>
 

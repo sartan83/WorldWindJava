@@ -4,16 +4,21 @@
 # Set up to run the Java build script per the Travis CI documentation
 language: java
 
-# Configure the build to use Oracle JDK 9
-jdk:
-  - openjdk11
+# Build on Ubuntu 22.04 with OpenJDK 17 from the distribution packages
+dist: jammy
 
-# Install the Ant JUnit package, which is missing from the Travis CI environment. See the Travis documentation: https://docs.travis-ci.com/user/installing-dependencies/#Adding-APT-Packages
+# Install OpenJDK 17 and the Ant JUnit package, which is missing from the Travis CI environment. See the Travis documentation: https://docs.travis-ci.com/user/installing-dependencies/#Adding-APT-Packages
 addons:
   apt:
     packages:
+      - openjdk-17-jdk
       - ant-optional
-      
+
+before_install:
+  - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+  - export PATH="$JAVA_HOME/bin:$PATH"
+  - java -version
+
 services:
   - xvfb
   

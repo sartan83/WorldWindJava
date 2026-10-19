@@ -42,4 +42,4 @@ fi
 # Run a WorldWind Demo
 #
 echo Running ${WWDEMO}
-java -Xmx1024m -classpath ./worldwind.jar:./worldwindx.jar:./gdal.jar:./jogl-all.jar:./gluegen-rt.jar ${WWDEMO}
+java -Xmx1024m --add-opens java.desktop/sun.awt=ALL-UNNAMED --add-opens java.desktop/sun.java2d=ALL-UNNAMED -classpath ./worldwind.jar:./worldwindx.jar:./gdal.jar:./jogl-all.jar:./gluegen-rt.jar ${WWDEMO}

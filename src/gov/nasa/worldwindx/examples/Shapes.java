@@ -72,7 +72,7 @@ public class Shapes {
         private Dimension canvasSize = new Dimension(800, 600);
         private ApplicationTemplate.AppPanel wwjPanel;
         private RenderableLayer layer = new RenderableLayer();
-        private TextRenderer textRenderer = new TextRenderer(java.awt.Font.decode("Arial-Plain-13"), true, false);
+        private TextRenderer textRenderer;
         
         public AppFrame() {
             // Create the WorldWindow.
@@ -115,6 +115,10 @@ public class Shapes {
                 if (currentShape instanceof Path) {
                     Path p1 = (Path) currentShape;
                     String length = Double.toString(p1.getLength());
+                    if (textRenderer == null) {
+                        // JOGL 2.5's TextRenderer needs a current GL context, so create it on the render thread.
+                        textRenderer = new TextRenderer(java.awt.Font.decode("Arial-Plain-13"), true, false);
+                    }
                     textRenderer.beginRendering(wwjPanel.getWidth(), wwjPanel.getHeight());
                     textRenderer.draw(length, 100, 100);
                     textRenderer.endRendering();

@@ -30,4 +30,4 @@ IF "%1"=="" (SET WWDEMO=gov.nasa.worldwindx.examples.ApplicationTemplate) ELSE (
 
 REM Run a WorldWind Demo
 @echo Running %WWDEMO%
-java -Xmx1024m -Dsun.java2d.noddraw=true -classpath .\worldwind.jar;.\worldwindx.jar;.\gdal.jar;.\jogl-all.jar;.\gluegen-rt.jar %WWDEMO%
+java -Xmx1024m --add-opens java.desktop/sun.awt=ALL-UNNAMED --add-opens java.desktop/sun.java2d=ALL-UNNAMED -Dsun.java2d.noddraw=true -classpath .\worldwind.jar;.\worldwindx.jar;.\gdal.jar;.\jogl-all.jar;.\gluegen-rt.jar %WWDEMO%

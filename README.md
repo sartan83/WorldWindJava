@@ -25,6 +25,28 @@ Official WorldWind Java releases have the latest stable features, enhancements a
 - [GitHub Milestones](https://github.com/NASAWorldWind/WorldWindJava/milestones) documents upcoming releases and the development roadmap
 - [Travis CI](https://travis-ci.com/NASAWorldWind/WorldWindJava) provides continuous integration and build automation
 
+## Requirements
+
+- **Java 17 or newer (JDK 17 is the minimum).** The build compiles with `--release 17`.
+- Apache Ant 1.10+ with the JUnit task (`ant-optional` on Debian/Ubuntu) to build from source:
+  `ant -f release-build.xml` builds and tests, and `ant -f release-build.xml assembleRelease` builds `worldwind.jar` and `worldwindx.jar`.
+- An OpenGL 2.x+ capable graphics driver (see Troubleshooting).
+
+### JVM flags for Java 17+
+
+Java 17 enforces strong encapsulation of JDK internals. WorldWind runs without extra flags, but the bundled JOGL 2.5.0
+needs access to two AWT internals to use the AWT toolkit lock on X11. Without that access, JOGL silently falls back.
+`run-demo.bash`, `run-demo.bat` and the NetBeans run configuration already pass these flags. Add them when you launch
+your own application from the classpath:
+
+```bash
+java --add-opens java.desktop/sun.awt=ALL-UNNAMED \
+     --add-opens java.desktop/sun.java2d=ALL-UNNAMED \
+     -cp worldwind.jar:worldwindx.jar:gdal.jar:jogl-all.jar:gluegen-rt.jar <main class>
+```
+
+For an executable jar, put `Add-Opens: java.desktop/sun.awt java.desktop/sun.java2d` in its manifest instead.
+
 ## Run a Demo
 
 The following options are available to run a WorldWind Java demo:

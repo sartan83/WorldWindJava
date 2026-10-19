@@ -34,8 +34,8 @@ package gov.nasa.worldwind;
 public class Version {
 
     private static final String MAJOR_VALUE = "2";
-    private static final String MINOR_VALUE = "2";
-    private static final String DOT_VALUE = "1";
+    private static final String MINOR_VALUE = "3";
+    private static final String DOT_VALUE = "0";
     private static final String versionNumber = "v" + MAJOR_VALUE + "." + MINOR_VALUE + "." + DOT_VALUE;
     private static final String versionName = "NASA WorldWind Java";
 

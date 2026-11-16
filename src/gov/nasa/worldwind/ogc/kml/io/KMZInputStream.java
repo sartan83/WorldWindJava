@@ -253,12 +253,18 @@ public class KMZInputStream implements KMLDoc
             return;
         }
 
-        // Create the path for the temp file and ensure all directories leading to it exist.
-        String tempFileName = this.tempDir + File.separator + this.currentEntry.getName();
-        WWIO.makeParentDirs(tempFileName);
+        // Create the path for the temp file, skipping entry names that would resolve outside the temp dir.
+        File outFile = WWIO.resolveContainedFile(this.tempDir, this.currentEntry.getName());
+        if (outFile == null)
+        {
+            String message = Logging.getMessage("KML.UnsafeKMZEntryName", this.currentEntry.getName());
+            Logging.logger().warning(message);
+            this.moveToNextEntry();
+            return;
+        }
 
-        // Copy the entry.
-        File outFile = new File(tempFileName);
+        // Ensure all directories leading to the temp file exist, then copy the entry.
+        WWIO.makeParentDirs(outFile.getPath());
         outFile.deleteOnExit();
         WWIO.saveBuffer(WWIO.readStreamToBuffer(this.zipStream), outFile);
         this.files.put(this.currentEntry.getName(), outFile);

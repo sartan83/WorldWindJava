@@ -1206,6 +1206,53 @@ public class WWIO
         return temp;
     }
 
+    /**
+     * Resolves a relative path, such as the name of an archive entry, against a directory and returns the resulting
+     * file only if it lies inside that directory. Backslashes are treated as path separators. Absolute paths, paths
+     * with a drive letter, paths containing ".." segments and paths that resolve outside the directory are rejected.
+     *
+     * @param parentDir the directory the path must stay within.
+     * @param childPath the relative path to resolve.
+     *
+     * @return the resolved file, or null if the path is empty or escapes the directory.
+     *
+     * @throws IllegalArgumentException if either argument is null.
+     * @throws IOException              if the directory's real path cannot be determined.
+     */
+    public static File resolveFileInDirectory(File parentDir, String childPath) throws IOException
+    {
+        if (parentDir == null)
+        {
+            String message = Logging.getMessage("nullValue.FileIsNull");
+            Logging.logger().severe(message);
+            throw new IllegalArgumentException(message);
+        }
+
+        if (childPath == null)
+        {
+            String message = Logging.getMessage("nullValue.FilePathIsNull");
+            Logging.logger().severe(message);
+            throw new IllegalArgumentException(message);
+        }
+
+        String normalizedPath = childPath.replace('\\', '/');
+        if (normalizedPath.isEmpty() || normalizedPath.startsWith("/") || normalizedPath.matches("^[A-Za-z]:.*"))
+            return null;
+
+        for (String part : normalizedPath.split("/"))
+        {
+            if (part.equals(".."))
+                return null;
+        }
+
+        java.nio.file.Path root = parentDir.toPath().toRealPath();
+        java.nio.file.Path resolved = root.resolve(normalizedPath).normalize();
+        if (!resolved.startsWith(root) || resolved.equals(root))
+            return null;
+
+        return resolved.toFile();
+    }
+
     public static File saveBufferToTempFile(ByteBuffer buffer, String suffix) throws IOException
     {
         if (buffer == null)

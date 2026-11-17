@@ -216,12 +216,19 @@ public class KMZFile implements KMLDoc
             return null;
         }
 
-        // Create the path for the temp file and ensure all directories leading to it exist.
-        String tempFileName = this.tempDir + File.separator + entry.getName();
-        WWIO.makeParentDirs(tempFileName);
+        // Create the path for the temp file and ensure all directories leading to it exist. Entries whose names would
+        // place them outside the temp dir are rejected.
+        File outFile = WWIO.resolveFileInDirectory(this.tempDir, entry.getName());
+        if (outFile == null)
+        {
+            String message = Logging.getMessage("KML.UnsafeKMZEntryName", entry.getName());
+            Logging.logger().warning(message);
+            return null;
+        }
+
+        WWIO.makeParentDirs(outFile.getPath());
 
         // Copy the entry.
-        File outFile = new File(tempFileName);
         outFile.deleteOnExit();
         WWIO.saveBuffer(WWIO.readStreamToBuffer(this.zipFile.getInputStream(entry), true), outFile);
         this.files.put(entry.getName(), outFile);
